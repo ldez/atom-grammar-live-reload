@@ -8,12 +8,12 @@ module.exports =
 
   config:
     enabled:
-      title: '[Only on Developer Mode] Enabled live reload'
+      title: 'Enabled live reload [Only on Developer Mode]'
       type: 'boolean'
       default: false
       order: 1
     grammarsPackageName:
-      title: '[Only on Developer Mode] Name of the package to grammars reload'
+      title: 'Name of the package to grammars reload [Only on Developer Mode]'
       description: 'ex: `language-git`'
       type: 'string'
       default: ''
@@ -73,6 +73,7 @@ module.exports =
                     delete atom.packages.loadedPackages[grammarsPackageName]
 
                     # Load package
+                    # (use `loadGrammarsSync` instead of `loadGrammars` because `loadGrammars` doesn't work properly)
                     atom.packages.loadPackage(grammarsPackageName).loadGrammarsSync()
                   .then =>
                     # Reload grammars for each editor
