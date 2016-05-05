@@ -1,0 +1,23 @@
+{
+  "name": "grammar-live-reload",
+  "version": "0.0.0",
+  "description": "Language grammars Live Reload (Async)",
+  "keywords": [
+    "grammar",
+    "reload",
+    "live"
+  ],
+  "repository": "https://github.com/ldez/atom-grammar-live-reload",
+  "license": "MIT",
+  "engines": {
+    "atom": ">=1.0.0 <2.0.0"
+  },
+  "dependencies": {
+    "season": "^5.3"
+  },
+  "devDependencies": {
+    "coffeelint": "^1.15.0",
+    "temp": "~0.8.3"
+  },
+  "main": "lib/main.coffee"
+}
