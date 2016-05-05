@@ -83,7 +83,7 @@ module.exports =
                         editor.reloadGrammar()
                     Promise.resolve 'success'
               else
-                Promise.resolve projectPackage.name + ' is not the rigth package.'
+                Promise.resolve projectPackage.name + ' is not the right package.'
         .catch (error) =>
           if @debug then console.error error
           Promise.resolve packageJsonPath + " doesn't exists."
