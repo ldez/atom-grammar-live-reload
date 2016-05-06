@@ -2,8 +2,6 @@
 path = require 'path'
 promiseHelper = require './promise-helper'
 
-String::endsWith ?= (s) -> s is '' or @[-s.length..] is s
-
 module.exports =
 
   config:
@@ -60,7 +58,7 @@ module.exports =
                   .then (entries) ->
                     # Gets project grammars
                     Promise.all(
-                      entries.filter (entry) -> entry.isFile() and entry.getBaseName().endsWith '.cson'
+                      entries.filter (entry) -> entry.isFile() and path.extname(entry.getBaseName()) is '.cson'
                         .map (entry) -> promiseHelper.readCsonFile(entry.path)
                     )
                   .then (grammars) ->
