@@ -24,11 +24,11 @@ module.exports =
   activate: (state) ->
     return unless atom.inDevMode() and not atom.inSpecMode()
 
-    @subscriptions = new CompositeDisposable()
+    @subscriptions = new CompositeDisposable
 
     @subscriptions.add atom.config.observe 'grammar-live-reload.enabled', (newValue) =>
       if newValue
-        @liveReloadSubscriptions = new CompositeDisposable()
+        @liveReloadSubscriptions = new CompositeDisposable
         @startliveReload()
       else
         @liveReloadSubscriptions?.dispose()
@@ -89,7 +89,7 @@ module.exports =
     Promise.all(promises)
       .then (msg) =>
         console.log 'Grammars reloaded.'
-        if @debug then  console.log msg
+        if @debug then console.log msg
       .catch (error) ->
         console.log 'Grammars failed to reload.'
         console.error error
