@@ -23,7 +23,7 @@ describe 'Promise helper', ->
         promiseHelper.fileExists(filePath).catch (r) -> error = r
 
       runs ->
-        expect(error.errno).toBe -2
+        expect(error.errno).toBeLessThan 0
         expect(error.code).toBe 'ENOENT'
         expect(error.syscall).toBe 'stat'
         expect(error.path).toMatch /^.*foobar$/
@@ -48,7 +48,7 @@ describe 'Promise helper', ->
         promiseHelper.readCsonFile(filePath).catch (r) -> error = r
 
       runs ->
-        expect(error.errno).toBe -2
+        expect(error.errno).toBeLessThan 0
         expect(error.code).toBe 'ENOENT'
         expect(error.syscall).toBe 'open'
         expect(error.path).toMatch /^.*foobar$/
@@ -74,7 +74,7 @@ describe 'Promise helper', ->
         promiseHelper.readCsonFile(directoryPath).catch (r) -> error = r
 
       runs ->
-        expect(error.errno).toBe -2
+        expect(error.errno).toBeLessThan 0
         expect(error.code).toBe 'ENOENT'
         expect(error.syscall).toBe 'open'
         expect(error.path).toMatch /^.*foobar$/
