@@ -3,6 +3,7 @@
 [![Atom Package](https://img.shields.io/apm/v/grammar-live-reload.svg)](https://atom.io/packages/grammar-live-reload)
 [![Atom Package Downloads](https://img.shields.io/apm/dm/grammar-live-reload.svg)](https://atom.io/packages/grammar-live-reload)
 [![Build Status](https://travis-ci.org/ldez/atom-grammar-live-reload.svg?branch=master)](https://travis-ci.org/ldez/atom-grammar-live-reload)
+[![Build status](https://ci.appveyor.com/api/projects/status/j6itrrlud0pk2nbn?svg=true)](https://ci.appveyor.com/project/ldez/atom-grammar-live-reload)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://github.com/ldez/atom-grammar-live-reload/blob/master/LICENSE.md)
 
 Reload automatically editors when grammars files (`.cson`) changes.
