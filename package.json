@@ -1,6 +1,6 @@
 {
   "name": "grammar-live-reload",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Language grammars Live Reload (Async)",
   "keywords": [
     "grammar",
