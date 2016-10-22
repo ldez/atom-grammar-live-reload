@@ -78,7 +78,11 @@ module.exports =
                     atom.workspace.getTextEditors().forEach (editor) =>
                       if editor.getGrammar().packageName is grammarsPackageName
                         if @debug then console.log editor.getTitle()
-                        editor.reloadGrammar()
+                        atomVersion = parseFloat(atom.getVersion())
+                        if atomVersion < 1.11
+                          editor.reloadGrammar()
+                        else
+                          atom.textEditors.maintainGrammar(editor)
                     Promise.resolve 'success'
               else
                 Promise.resolve projectPackage.name + ' is not the right package.'
