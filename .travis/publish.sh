@@ -4,9 +4,7 @@ set -e
 ## Custom variables
 USER_EMAIL="lfernandez.dev@gmail.com"
 USER_NAME="Ludovic Fernandez"
-GIT_REPOSITORY='git@github.com:ldez/atom-grammar-live-reload.git'
 SSH_KEY_NAME="travis_rsa"
-AUTHORIZED_BRANCH='master'
 PUBLISH_TYPE=${PUBLISH_TYPE:="patch"}
 
 ## Fix apm path to the Atom stable channel
@@ -28,6 +26,11 @@ fi
 ## Git configuration
 git config --global user.email "${USER_EMAIL}"
 git config --global user.name "${USER_NAME}"
+
+## Repository URL
+GIT_REPOSITORY=$(git config remote.origin.url)
+GIT_REPOSITORY=${GIT_REPOSITORY/git:\/\/github.com\//git@github.com:}
+GIT_REPOSITORY=${GIT_REPOSITORY/https:\/\/github.com\//git@github.com:}
 
 ## Loading SSH key
 echo "Loading key..."
