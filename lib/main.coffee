@@ -87,8 +87,13 @@ module.exports =
                           # - `maintainGrammar` change this behavior and don't reload existing grammar.
                           #   - https://github.com/atom/atom/pull/12125
                           #   - https://github.com/atom/atom/blob/c844d0f099e6ed95c52f0b94e1f141759926aeb8/src/text-editor-registry.js#L201
-                          atom.textEditors.setGrammarOverride(editor, 'text.plain')
-                          atom.textEditors.clearGrammarOverride(editor)
+                          grammarOverride = atom.textEditors.editorGrammarOverrides[editor.id]
+                          atom.textEditors.setGrammarOverride editor, 'text.plain'
+                          if grammarOverride?
+                            atom.textEditors.setGrammarOverride editor, grammarOverride
+                          else
+                            atom.textEditors.clearGrammarOverride editor
+
                     Promise.resolve 'success'
               else
                 Promise.resolve projectPackage.name + ' is not the right package.'
