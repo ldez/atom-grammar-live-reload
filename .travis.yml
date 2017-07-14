@@ -3,9 +3,13 @@ notifications:
     on_success: never
     on_failure: change
 
-script: 'curl -s https://raw.githubusercontent.com/atom/ci/master/build-package.sh | sh'
+script:
+  - curl -s -O https://raw.githubusercontent.com/atom/ci/master/build-package.sh
+  - chmod u+x build-package.sh
+  - ./build-package.sh
 
 sudo: false
+dist: trusty
 
 git:
   depth: 10
@@ -31,9 +35,9 @@ addons:
   apt:
     packages:
     - build-essential
-    - git
-    - libgnome-keyring-dev
     - fakeroot
+    - git
+    - libsecret-1-dev
 
 after_success:
   - ./.travis/publish.sh
