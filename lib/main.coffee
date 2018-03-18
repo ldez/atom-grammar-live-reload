@@ -1,7 +1,17 @@
 {readCsonFile} = require './promise-helper'
 path = require 'path'
+fs = require 'fs'
 
 toUnix = (path) -> path.replace /\\/g, '/'
+
+getPackageNameByFilePath = (currentPath) ->
+  rootPath = path.resolve currentPath, '../..'
+  for pack in atom.packages.getActivePackages()
+    stats = fs.lstatSync pack.path
+    packPath = if stats.isSymbolicLink then fs.realpathSync pack.path else pack.path
+    if packPath is rootPath
+      return pack.name
+  ""
 
 module.exports =
 
@@ -44,8 +54,9 @@ module.exports =
           # See if the file's package is blacklisted.
           if blacklist = atom.config.get 'grammar-live-reload.blacklist'
 
-            # Assume the package directory name equals "name" in package.json
-            packName = path.basename path.resolve filePath, '../..'
+            unless packName = getPackageNameByFilePath filePath
+              debug and console.log 'Package does not exist: ' + filePath
+              return
 
             # Support both comma-separated and space-separated names.
             for name in blacklist.split /(?:,\s*)|\s+/g
@@ -64,9 +75,8 @@ module.exports =
   reload: (event) ->
     {debug} = this
 
-    packName = path.basename path.resolve event.path, '../..'
-    unless pack = atom.packages.loadedPackages[packName]
-      debug and console.log 'Package does not exist: ' + packName
+    unless packName = getPackageNameByFilePath event.path
+      debug and console.log 'Package does not exist: ' + event.path
       return
 
     # Unload the grammar package.
