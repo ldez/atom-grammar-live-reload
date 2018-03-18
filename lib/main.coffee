@@ -82,28 +82,29 @@ module.exports =
     # Unload the grammar package.
     debug and console.log 'Deactivating package: ' + packName
     atom.packages.deactivatePackage packName
-    .then -> atom.packages.unloadPackage packName
+      .then -> atom.packages.unloadPackage packName
 
-    # Load the grammar package.
-    .then ->
-      debug and console.log 'Activating package: ' + packName
-      atom.packages.activatePackage packName
+      # Load the grammar package.
+      .then ->
+        debug and console.log 'Activating package: ' + packName
+        atom.packages.activatePackage packName
 
-    # Every grammar scope in the package has been reloaded,
-    # so we need to update every editor that uses one of them.
-    .then (pack) ->
-      grammars = {}
-      for grammar in pack.grammars
-        grammars[grammar.scopeName] = grammar
+      # Every grammar scope in the package has been reloaded,
+      # so we need to update every editor that uses one of them.
+      .then (pack) ->
+        grammars = {}
+        for grammar in pack.grammars
+          grammars[grammar.scopeName] = grammar
 
-      atom.workspace.getTextEditors().forEach (editor) ->
-        grammar = editor.getGrammar()
-        if grammar.packageName is packName
-          debug and console.log 'Updating grammar for editor: ', editor
-          editor.setGrammar grammars[grammar.scopeName]
+        for editor in atom.workspace.getTextEditors()
+          do (editor) ->
+            grammar = editor.getGrammar()
+            if grammar.packageName is packName
+              debug and console.log 'Updating grammar for editor: ', editor
+              editor.setGrammar grammars[grammar.scopeName]
 
-    # Report any errors.
-    .catch console.error
+      # Report any errors.
+      .catch console.error
 
   deactivate: ->
     @configSub?.dispose()
