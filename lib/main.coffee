@@ -1,114 +1,95 @@
-{CompositeDisposable} = require 'atom'
+{readCsonFile} = require './promise-helper'
 path = require 'path'
-promiseHelper = require './promise-helper'
+
+grammarRE = /\/language-[^\/]+\/(grammars|settings)\/[^\/]+\.(?:c|j)son$/
+
+toUnix = (path) -> path.replace /\\/g, '/'
 
 module.exports =
 
   config:
     enabled:
-      title: 'Enabled live reload [Only on Developer Mode]'
+      title: 'Enable live reload (only in dev mode)'
       type: 'boolean'
-      default: false
+      default: true
       order: 1
-    grammarsPackageName:
-      title: 'Name of the package to grammars reload [Only on Developer Mode]'
-      description: 'ex: `language-git`'
+
+    blacklist:
+      title: 'Disable live reload for specific grammars'
+      description: 'eg: "language-git, language-swift"'
       type: 'string'
       default: ''
       order: 2
 
-  subscriptions: null
-  liveReloadSubscriptions: null
+  configSub: null
+  editorSub: null
+  watching: Object.create null
   debug: false
 
   activate: (state) ->
-    return unless atom.inDevMode() and not atom.inSpecMode()
+    return if atom.inSpecMode() or not atom.inDevMode()
 
-    @subscriptions = new CompositeDisposable
+    @configSub = atom.config.observe 'grammar-live-reload.enabled', (enabled) =>
+      return @editorSub?.dispose() unless enabled
 
-    @subscriptions.add atom.config.observe 'grammar-live-reload.enabled', (newValue) =>
-      if newValue
-        @liveReloadSubscriptions = new CompositeDisposable
-        @startliveReload()
-      else
-        @liveReloadSubscriptions?.dispose()
+      reload = @reload.bind this
+      @editorSub = atom.workspace.observeTextEditors (editor) =>
+        if grammarRE.test toUnix filePath = editor.getPath()
 
-  startliveReload: ->
-    if atom.inDevMode() and not atom.inSpecMode() and atom.config.get 'grammar-live-reload.enabled'
-      @liveReloadSubscriptions.add atom.workspace.observeTextEditors (editor) =>
-        if editor.getTitle()?.endsWith '.cson'
-          editor.buffer.onDidSave =>
-            @reload()
+          # See if the file's package is blacklisted.
+          if blacklist = atom.config.get 'grammar-live-reload.blacklist'
 
-  reload: ->
-    return unless atom.config.get('grammar-live-reload.enabled')
+            # Assume the package directory name equals "name" in package.json
+            packName = path.basename path.resolve filePath, '../..'
 
-    grammarsPackageName = atom.config.get 'grammar-live-reload.grammarsPackageName'
-    return unless grammarsPackageName?
+            # Support both comma-separated and space-separated names.
+            for name in blacklist.split /(?:,\s*)|\s+/g
+              if name is packName
+                debug and console.log 'Package reload was prevented: ' + packName
+                return
 
-    promises = atom.project.rootDirectories.map (rootDir) =>
-      packageJsonPath = path.join rootDir.path, 'package.json'
+          # Avoid watching the same file twice.
+          unless @watching[filePath]
+            @debug and console.log 'Watching file for changes: ' + filePath
+            @watching[filePath] = true
+            editor.onDidSave reload
+            editor.onDidDestroy =>
+              delete @watching[filePath]
 
-      promiseHelper.fileExists(packageJsonPath)
-        .then (filepath) =>
-          promiseHelper.readCsonFile(filepath)
-            .then (projectPackage) =>
-              if projectPackage.name is grammarsPackageName
-                promiseHelper.getDirectoryEntries path.join rootDir.path, 'grammars'
-                  .then (entries) ->
-                    # Gets project grammars
-                    Promise.all(
-                      entries.filter (entry) -> entry.isFile() and path.extname(entry.getBaseName()) is '.cson'
-                        .map (entry) -> promiseHelper.readCsonFile(entry.path)
-                    )
-                  .then (grammars) ->
-                    # Remove grammars
-                    grammars.map (grammar) ->
-                      {scopeName} = grammar
-                      atom.grammars.removeGrammarForScopeName scopeName
-                  .then ->
-                    # Remove loaded package (Hack force reload)
-                    delete atom.packages.loadedPackages[grammarsPackageName]
+  reload: (event) ->
+    {debug} = this
 
-                    # Load package
-                    # (use `loadGrammarsSync` instead of `loadGrammars` because `loadGrammars` doesn't work properly)
-                    atom.packages.loadPackage(grammarsPackageName).loadGrammarsSync()
-                  .then =>
-                    # Reload grammars for each editor
-                    atom.workspace.getTextEditors().forEach (editor) =>
-                      if editor.getGrammar().packageName is grammarsPackageName
-                        if @debug then console.log editor.getTitle()
-                        atomVersion = parseFloat(atom.getVersion())
-                        if atomVersion < 1.11
-                          editor.reloadGrammar()
-                        else
-                          # Workaround because:
-                          # - `reloadGrammar` is buggy before 1.11 (https://github.com/atom/atom/issues/13022)
-                          # - `maintainGrammar` change this behavior and don't reload existing grammar.
-                          #   - https://github.com/atom/atom/pull/12125
-                          #   - https://github.com/atom/atom/blob/c844d0f099e6ed95c52f0b94e1f141759926aeb8/src/text-editor-registry.js#L201
-                          grammarOverride = atom.textEditors.editorGrammarOverrides[editor.id]
-                          atom.textEditors.setGrammarOverride editor, 'text.plain'
-                          if grammarOverride?
-                            atom.textEditors.setGrammarOverride editor, grammarOverride
-                          else
-                            atom.textEditors.clearGrammarOverride editor
+    packName = path.basename path.resolve event.path, '../..'
+    unless pack = atom.packages.loadedPackages[packName]
+      debug and console.log 'Package does not exist: ' + packName
+      return
 
-                    Promise.resolve 'success'
-              else
-                Promise.resolve projectPackage.name + ' is not the right package.'
-        .catch (error) =>
-          if @debug then console.error error
-          Promise.resolve packageJsonPath + " doesn't exists."
+    # Unload the grammar package.
+    debug and console.log 'Deactivating package: ' + packName
+    atom.packages.deactivatePackage packName
+    .then -> atom.packages.unloadPackage packName
 
-    Promise.all(promises)
-      .then (msg) =>
-        console.log 'Grammars reloaded.'
-        if @debug then console.log msg
-      .catch (error) ->
-        console.log 'Grammars failed to reload.'
-        console.error error
+    # Load the grammar package.
+    .then ->
+      debug and console.log 'Activating package: ' + packName
+      atom.packages.activatePackage packName
 
-    deactivate: ->
-      @subscriptions?.dispose()
-      @liveReloadSubscriptions?.dispose()
+    # Every grammar scope in the package has been reloaded,
+    # so we need to update every editor that uses one of them.
+    .then (pack) ->
+      grammars = {}
+      for grammar in pack.grammars
+        grammars[grammar.scopeName] = grammar
+
+      atom.workspace.getTextEditors().forEach (editor) ->
+        grammar = editor.getGrammar()
+        if grammar.packageName is packName
+          debug and console.log 'Updating grammar for editor: ', editor
+          editor.setGrammar grammars[grammar.scopeName]
+
+    # Report any errors.
+    .catch console.error
+
+  deactivate: ->
+    @configSub?.dispose()
+    @editorSub?.dispose()
