@@ -30,7 +30,7 @@ module.exports =
       order: 2
 
     grammarRE:
-      title: 'Regular expression us to detect grammar files'
+      title: 'Regular expression use to detect grammar files'
       type: 'string'
       default: '\/language-[^\/]+\/(grammars|settings)\/[^\/]+\.(?:c|j)son$'
       order: 3

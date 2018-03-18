@@ -16,9 +16,9 @@ Only editors that are affected by the selected language are reload.
 
 ## Options
 
-- `Enabled live reload`: check if you want to enabled grammars live reload.
-- `Name of the package to grammars reload`: define the name of your grammars package. (ex: `language-git`)
-  - currently not support for multiple packages language (but support multiple languages in one package)
+- `Enable live reload`: check if you want to enabled grammars live reload.
+- `Disable live reload for specific grammars`: define the names of your grammars package who exclude from live reload. (ex: `language-git, language-swift`)
+- `Regular expression use to detect grammar files`
 
 ## Install
 
