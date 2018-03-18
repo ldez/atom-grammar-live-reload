@@ -1,8 +1,6 @@
 {readCsonFile} = require './promise-helper'
 path = require 'path'
 
-grammarRE = /\/language-[^\/]+\/(grammars|settings)\/[^\/]+\.(?:c|j)son$/
-
 toUnix = (path) -> path.replace /\\/g, '/'
 
 module.exports =
@@ -21,6 +19,12 @@ module.exports =
       default: ''
       order: 2
 
+    grammarRE:
+      title: 'Regular expression us to detect grammar files'
+      type: 'string'
+      default: '\/language-[^\/]+\/(grammars|settings)\/[^\/]+\.(?:c|j)son$'
+      order: 3
+
   configSub: null
   editorSub: null
   watching: Object.create null
@@ -34,6 +38,7 @@ module.exports =
 
       reload = @reload.bind this
       @editorSub = atom.workspace.observeTextEditors (editor) =>
+        grammarRE = ///#{atom.config.get 'grammar-live-reload.grammarRE'}///
         if grammarRE.test toUnix filePath = editor.getPath()
 
           # See if the file's package is blacklisted.
